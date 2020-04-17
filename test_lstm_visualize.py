@@ -14,9 +14,9 @@ from test_lstm import RNNAE
 
 class Model(object):
 
-    def __init__(self):
+    def __init__(self, modelname):
         self.model = RNNAE()
-        model_dict = torch.load('models/test-lstm.pt', map_location='cpu')
+        model_dict = torch.load(modelname, map_location='cpu')
         self.model.load_state_dict(model_dict)
         self.model.eval
 
@@ -30,52 +30,71 @@ class Model(object):
         return self.model.decode(s, z)
 
 
-def main():
+def plot_trust2z(model):
 
-    DATANAME = "models/traj_dataset.pkl"
-    data = pickle.load(open(DATANAME, "rb"))
-    model = Model()
+    data = pickle.load(open(DATASET, "rb"))
+    data = torch.Tensor(data)
 
-    traj = torch.tensor(data[2])
-    x = traj[:,1:]
-    print(model.encode(x))
+    trust, Z = [], []
+    for traj in data:
+        x = traj[:,1:]
+        z_pred = model.encode(x)
+        z_true = traj[0, 0]
+        trust.append(z_true.item())
+        Z.append(z_pred.item())
 
-    traj = torch.tensor(data[5])
-    x = traj[:,1:]
-    print(model.encode(x))
+    plt.plot(trust, Z, 'bo')
+    plt.show()
 
-    traj = torch.tensor(data[8])
-    x = traj[:,1:]
-    print(model.encode(x))
 
-    # traj = torch.tensor(data[2])
-    # x = traj[:,1:]
-    # s = x[:,0:6]
-    # a = x[:,6:8]
-    # z = traj[0,0].view(1)
-    # traj_hat1 = model.forward(x, s, z)
-    #
-    # traj_hat2 = model.forward(x, s, torch.Tensor([0.0]).view(1))
-    #
-    # plt.plot(traj_hat1.detach().numpy(),'-')
-    # plt.plot(traj_hat2.detach().numpy(),'-')
-    # plt.show()
+def plot_action(model):
 
-    for idx in range(11):
-        traj = torch.tensor(data[idx])
+    data = pickle.load(open(DATASET, "rb"))
+    data = torch.Tensor(data)
+
+    for traj in data:
         x = traj[:,1:]
         s = x[:,0:6]
-        arobot = x[:,4:6]
         a = x[:,6:8]
-        z = traj[0,0]
-        zhat = model.encode(x)
-        traj_hat = model.forward(x, s)
+        z = traj[0, 0].item()
+        ahat = model.forward(x, s)
 
-        print(z, zhat)
-        # plt.plot(arobot.numpy(),'-x')
-        plt.plot(a.numpy(),'--o')
-        plt.plot(traj_hat.detach().numpy(),'-')
+        print(round(z*10))
+        plt.plot(a.numpy(),'--')
+        plt.plot(ahat.detach().numpy(),'o')
         plt.show()
+
+
+def plot_zrollout(model):
+
+    data = pickle.load(open(DATASET, "rb"))
+    data = torch.Tensor(data)
+
+    Z = [-1.0, -0.5, 0.0, 0.5, 1.0]
+    for traj in data:
+        x = traj[:,1:]
+        s = x[:,0:6]
+        ahuman = x[:,6:8]
+        arobot = x[:,4:6]
+        for z in Z:
+            zt = torch.tensor(z).view(1)
+            ahat = model.decode(s, zt)
+            plt.plot(ahat.detach().numpy(),'-')
+        plt.plot(ahuman.numpy(),'x')
+        plt.plot(arobot.numpy(),'s')
+        plt.show()
+
+
+DATASET = "models/traj_dataset.pkl"
+
+def main():
+
+    modelname = 'models/test-lstm-stable.pt'
+    model = Model(modelname)
+
+    plot_trust2z(model)
+    # plot_action(model)
+    plot_zrollout(model)
 
 
 if __name__ == "__main__":

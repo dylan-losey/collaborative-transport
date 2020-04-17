@@ -27,12 +27,14 @@ class RNNAE(nn.Module):
         self.i2h_enc = nn.Linear(self.input_size_enc + self.hidden_size_enc, self.hidden_size_enc)
         self.i2o_enc = nn.Linear(self.input_size_enc + self.hidden_size_enc, self.output_size_enc)
 
+        self.hidden_size = 5
         self.input_size = 7
         self.output_size = 2
 
-        self.fc1 = nn.Linear(self.input_size, 2*self.input_size)
-        self.fc2 = nn.Linear(2*self.input_size, 2*self.input_size)
-        self.fc3 = nn.Linear(2*self.input_size, self.output_size)
+        self.i2h = nn.Linear(self.input_size + self.hidden_size, self.hidden_size)
+        self.i2o_1 = nn.Linear(self.input_size + self.hidden_size, 2*self.input_size)
+        self.i2o_2 = nn.Linear(2*self.input_size, 2*self.input_size)
+        self.i2o_3 = nn.Linear(2*self.input_size, self.output_size)
         self.relu = nn.ReLU()
 
         self.loss = nn.MSELoss()
@@ -45,10 +47,13 @@ class RNNAE(nn.Module):
         return output, hidden
 
 
-    def decode_step(self, input):
-        h1 = self.relu(self.fc1(input))
-        h2 = self.relu(self.fc2(h1))
-        return self.fc3(h2)
+    def decode_step(self, input, hidden):
+        combined = torch.cat((input, hidden), 0)
+        hidden = self.i2h(combined)
+        h1 = self.relu(self.i2o_1(combined))
+        h2 = self.relu(self.i2o_2(h1))
+        output = self.i2o_3(h2)
+        return output, hidden
 
 
     def encode(self, x):
@@ -60,9 +65,11 @@ class RNNAE(nn.Module):
 
     def decode(self, s, z):
         a_hat = torch.zeros(len(s), 2)
+        hidden = torch.randn(self.hidden_size)
         for count, input in enumerate(s):
             input_with_z = torch.cat((input, z), 0)
-            a_hat[count,:] = self.decode_step(input_with_z)
+            output, hidden = self.decode_step(input_with_z, hidden)
+            a_hat[count,:] = output
         return a_hat
 
 
@@ -77,13 +84,13 @@ LR = 0.01
 LR_STEP_SIZE = 2000
 LR_GAMMA = 0.1
 DATANAME = "models/traj_dataset.pkl"
+SAVENAME = "models/test-lstm.pt"
 
 
 def main():
 
     data = pickle.load(open(DATANAME, "rb"))
     data = torch.Tensor(data)
-    # subdata = torch.tensor([data[2], data[5], data[8]])
     model = RNNAE()
 
     optimizer = optim.Adam(model.parameters(), lr=LR)
@@ -105,10 +112,7 @@ def main():
         optimizer.step()
         scheduler.step()
         print(idx, loss.item())
-        torch.save(model.state_dict(), "models/test-lstm.pt")
-        if loss.item() < 10:
-            break
-
+        torch.save(model.state_dict(), SAVENAME)
 
 
 if __name__ == "__main__":
