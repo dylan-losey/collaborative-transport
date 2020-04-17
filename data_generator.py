@@ -61,15 +61,19 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
 
         # create goal
-        goal_angle = np.random.uniform(-math.pi, math.pi)
-        goal_radius = np.random.uniform(300,360)
+        goal_angle = math.pi/4#np.random.uniform(-math.pi, math.pi)
+        goal_radius = 350#np.random.uniform(300,360)
         self.goal = np.array([0.5*worldx, 0.5*worldy])
         self.goal += goal_radius * np.array([math.cos(goal_angle), math.sin(goal_angle)])
         self.dist2goal = None
 
         # create obstacle
-        obs_angle = goal_angle + np.random.uniform(-math.pi/2, math.pi/2)
-        obs_radius = np.random.uniform(150,200)
+        obs_angle = math.pi/4 + math.pi/6
+        # if np.random.random() < 0.5:
+        #     obs_angle = goal_angle - math.pi/6
+        # else:
+        #     obs_angle = goal_angle + math.pi/6
+        obs_radius = 180#np.random.uniform(150,200)
         self.obs = np.array([0.5*worldx, 0.5*worldy])
         self.obs += obs_radius * np.array([math.cos(obs_angle), math.sin(obs_angle)])
         self.dist2obs = None
@@ -100,10 +104,10 @@ class Player(pygame.sprite.Sprite):
 
         # noise properties
         self.mu = 0.0
-        self.sigma = 30.0
+        self.sigma = 0.0
 
         # trust properties
-        self.time2hold = 10
+        self.time2hold = 1
         self.n_steps = 0
         self.trust = None
         self.trust_param = None
@@ -149,9 +153,9 @@ class Player(pygame.sprite.Sprite):
         if not self.n_steps % self.time2hold:
             self.trust = (np.random.random() < self.trust_param)
         self.n_steps += 1
-        f2 = fgoal
-        if self.trust:
-            f2 = copy.deepcopy(f1)
+        f2 = fgoal * (1 - self.trust_param) + f1 * self.trust_param
+        # if self.trust:
+        #     f2 = copy.deepcopy(f1)
         f2 += np.random.normal(self.mu, self.sigma, 2)
 
         # save the inputs
@@ -180,62 +184,64 @@ class Player(pygame.sprite.Sprite):
 def main():
 
     num_of_runs = int(sys.argv[1])
-    trust = float(sys.argv[2])
-    fps = 40
+    TRUST = [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
+    fps = 3
 
-    for count in range(num_of_runs):
+    for trust in TRUST:
 
-        file_name = "simulated-data/t" + str(trust) + "_r" + str(count) + ".pkl"
+        for count in range(num_of_runs):
 
-        clock = pygame.time.Clock()
-        pygame.init()
-        world = pygame.display.set_mode([worldx,worldy])
+            file_name = "simulated-data/t" + str(trust) + "_r" + str(count) + ".pkl"
 
-        player = Player()
-        target = Target(player.goal)
-        obs = Obstacle(player.obs)
-        sprite_list = pygame.sprite.Group()
-        sprite_list.add(target)
-        sprite_list.add(obs)
-        sprite_list.add(player)
+            clock = pygame.time.Clock()
+            pygame.init()
+            world = pygame.display.set_mode([worldx,worldy])
 
-        data = []
-        prev_time = time.time()
-        time_elapsed = 0
-        player.trust_param = trust
+            player = Player()
+            target = Target(player.goal)
+            obs = Obstacle(player.obs)
+            sprite_list = pygame.sprite.Group()
+            sprite_list.add(target)
+            sprite_list.add(obs)
+            sprite_list.add(player)
 
-        while True:
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit(); sys.exit()
-                    main = False
-                if event.type == pygame.KEYUP:
-                    if event.key == ord('q'):
-                            pygame.quit()
-                            sys.exit()
-                            main = False
-
-            delta_t = time.time() - prev_time
-            time_elapsed += delta_t
+            data = []
             prev_time = time.time()
+            time_elapsed = 0
+            player.trust_param = trust
 
-            player.update(delta_t)
+            while True:
 
-            data.append([time_elapsed, player.x, player.y] + list(player.goal) + list(player.obs) + player.f1 + player.f2)
-            pickle.dump(data, open(file_name, "wb" ))
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit(); sys.exit()
+                        main = False
+                    if event.type == pygame.KEYUP:
+                        if event.key == ord('q'):
+                                pygame.quit()
+                                sys.exit()
+                                main = False
 
-            if player.dist2goal < 50:
-                print(data)
-                print("We made it to the target!")
-                pygame.quit()
-                break
+                delta_t = time.time() - prev_time
+                time_elapsed += delta_t
+                prev_time = time.time()
 
-            world.fill((0,0,0))
-            sprite_list.draw(world)
+                player.update(delta_t)
 
-            pygame.display.flip()
-            clock.tick(fps)
+                data.append([time_elapsed, player.x, player.y] + list(player.goal) + list(player.obs) + player.f1 + player.f2)
+                pickle.dump(data, open(file_name, "wb" ))
+
+                if player.dist2goal < 50:
+                    print(len(data))
+                    print("We made it to the target!")
+                    pygame.quit()
+                    break
+
+                world.fill((0,0,0))
+                sprite_list.draw(world)
+
+                pygame.display.flip()
+                clock.tick(fps)
 
 
 if __name__ == "__main__":
