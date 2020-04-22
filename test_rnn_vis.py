@@ -8,7 +8,7 @@ import copy
 import numpy as np
 import sys
 import os
-from test_lstm import RNNAE
+from test_rnn import RNNAE
 
 
 
@@ -89,11 +89,11 @@ DATASET = "models/traj_dataset.pkl"
 
 def main():
 
-    modelname = 'models/test-lstm-stable.pt'
+    modelname = 'models/test-lstm.pt'
     model = Model(modelname)
 
     plot_trust2z(model)
-    # plot_action(model)
+    plot_action(model)
     plot_zrollout(model)
 
 
