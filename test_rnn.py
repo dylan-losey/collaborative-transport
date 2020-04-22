@@ -23,10 +23,11 @@ class RNNAE(nn.Module):
         self.input_size_enc = 8
         self.output_size_enc = 1
         self.lstm_enc = nn.LSTM(self.input_size_enc, self.hidden_size_enc)
-        self.fc_enc = nn.Linear(self.hidden_size_enc, self.output_size_enc)
+        self.fc_enc_1 = nn.Linear(self.hidden_size_enc, 2*self.hidden_size_enc)
+        self.fc_enc_2 = nn.Linear(2*self.hidden_size_enc, self.output_size_enc)
 
         # decoder
-        self.hidden_size_dec = 5
+        self.hidden_size_dec = 10
         self.input_size_dec = 7
         self.output_size_dec = 2
         self.lstm = nn.LSTM(self.input_size_dec, self.hidden_size_dec)
@@ -44,7 +45,8 @@ class RNNAE(nn.Module):
         hidden = (torch.randn(1,1,self.hidden_size_enc), torch.randn(1,1,self.hidden_size_enc))
         for count, input in enumerate(x):
             output, hidden = self.lstm_enc(input.view(1,1,-1), hidden)
-        return self.fc_enc(output[0,0,:])
+        h1 = self.relu(self.fc_enc_1(output[0,0,:]))
+        return self.fc_enc_2(h1)
 
 
     # decode each input to a human action
@@ -64,6 +66,7 @@ class RNNAE(nn.Module):
         z = self.encode(x)
         a_hat = self.decode(s, z)
         return a_hat
+
 
 
 EPOCH = 10000

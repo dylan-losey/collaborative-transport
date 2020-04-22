@@ -70,7 +70,7 @@ def plot_zrollout(model):
     data = pickle.load(open(DATASET, "rb"))
     data = torch.Tensor(data)
 
-    Z = [-1.0, -0.5, 0.0, 0.5, 1.0]
+    Z = [0.0, 0.25, 0.5, 0.75, 1.0]
     for traj in data:
         x = traj[:,1:]
         s = x[:,0:6]
@@ -93,8 +93,8 @@ def main():
     model = Model(modelname)
 
     plot_trust2z(model)
-    plot_action(model)
-    plot_zrollout(model)
+    # plot_action(model)
+    # plot_zrollout(model)
 
 
 if __name__ == "__main__":
