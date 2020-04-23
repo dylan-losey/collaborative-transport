@@ -73,7 +73,7 @@ EPOCH = 10000
 LR = 0.01
 LR_STEP_SIZE = 2000
 LR_GAMMA = 0.1
-DATANAME = "models/traj_dataset.pkl"
+DATANAME = "dataset/dylan_test.pkl"
 SAVENAME = "models/test-lstm.pt"
 
 
@@ -92,7 +92,7 @@ def main():
         loss = 0.0
 
         for traj in data:
-            x = traj[:,1:]
+            x = traj[:,0:8]
             s = x[:,0:6]
             a = x[:,6:8]
             a_hat = model(x, s)

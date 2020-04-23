@@ -99,14 +99,14 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
 
         # create goal
-        goal_angle = math.pi/4
+        goal_angle = 0.0#np.random.uniform(-math.pi, math.pi)
         goal_radius = 350
         self.goal = np.array([0.5*worldx, 0.5*worldy])
         self.goal += goal_radius * np.array([math.cos(goal_angle), math.sin(goal_angle)])
         self.dist2goal = None
 
         # create obstacle
-        obs_angle = math.pi/4 + math.pi/6
+        obs_angle = -math.pi/6#goal_angle + np.random.uniform(-math.pi/6, math.pi/6)
         obs_radius = 180
         self.obs = np.array([0.5*worldx, 0.5*worldy])
         self.obs += obs_radius * np.array([math.cos(obs_angle), math.sin(obs_angle)])
@@ -200,12 +200,12 @@ class Player(pygame.sprite.Sprite):
 def main():
 
     num_of_runs = int(sys.argv[1])
-    TRUST = [0.0,0.5,1.0]
     fps = 40
 
     for count in range(num_of_runs):
 
-        # file_name = "simulated-data/t" + str(trust) + "_r" + str(count) + ".pkl"
+        file_name = "experimental-data/r" + str(count) + ".pkl"
+        print("round: ", count)
 
         pygame.init()
         clock = pygame.time.Clock()
@@ -217,17 +217,15 @@ def main():
         obs = Obstacle(player.obs)
         sprite_list = pygame.sprite.Group()
         sprite_list.add(target)
-        sprite_list.add(obs)
+        # sprite_list.add(obs)
         sprite_list.add(player)
 
         data = []
         prev_time = time.time()
-        time_elapsed = 0
 
         while True:
 
             delta_t = time.time() - prev_time
-            time_elapsed += delta_t
             prev_time = time.time()
 
             f2, e_stop = joystick.input()
@@ -239,12 +237,10 @@ def main():
             player.f2 = f2
             player.update(delta_t)
 
-            # data.append([time_elapsed, player.x, player.y] + list(player.goal) + list(player.obs) + player.f1 + player.f2)
-            # pickle.dump(data, open(file_name, "wb" ))
+            data.append([player.x, player.y] + list(player.goal) + player.f1 + player.f2 + list(player.obs))
+            pickle.dump(data, open(file_name, "wb" ))
 
             if player.dist2goal < 50:
-                print(len(data))
-                print("We made it to the target!")
                 pygame.quit()
                 break
 

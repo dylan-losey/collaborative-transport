@@ -9,36 +9,45 @@ import matplotlib.pyplot as plt
 def main():
 
     dataset = []
-    folder = 'simulated-data'
-    savename = 'models/traj_dataset.pkl'
+    folder = 'experimental-data'
+    savename = 'dataset/dylan_test.pkl'
 
-    for filename in os.listdir(folder):
-        local_data = pickle.load(open(folder + "/" + filename, "rb"))
-        traj = []
-        for count, item in enumerate(local_data):
-            item_x = item[1:5] + item[7:11]
-            item_x[0] = (item_x[0] - 400) / 350.0
-            item_x[1] = (item_x[1] - 400) / 350.0
-            item_x[2] = (item_x[2] - 400) / 350.0
-            item_x[3] = (item_x[3] - 400) / 350.0
-            item_x[4] = item_x[4] / 50.0
-            item_x[5] = item_x[5] / 50.0
-            item_x[6] = item_x[6] / 50.0
-            item_x[7] = item_x[7] / 50.0
-            if count < 20:
-                traj.append([float(filename[1:4])] + item_x)
+    n_traj = len([name for name in os.listdir(folder)])
+    for run in range(n_traj):
+        filename = "r" + str(run) + ".pkl"
+        traj = pickle.load(open(folder + "/" + filename, "rb"))
+        traj_normalized = []
+        for count, item in enumerate(traj):
+            item[0] = (item[0] - 400) / 350.0
+            item[1] = (item[1] - 400) / 350.0
+            item[2] = (item[2] - 400) / 350.0
+            item[3] = (item[3] - 400) / 350.0
+            item[4] = item[4] / 50.0
+            item[5] = item[5] / 50.0
+            item[6] = item[6] / 50.0
+            item[7] = item[7] / 50.0
+            item[8] = (item[8] - 400) / 350.0
+            item[9] = (item[9] - 400) / 350.0
+            traj_normalized.append(item)
+        traj_subsampled = []
+        count = 0
+        for idx in range(0,len(traj),10):
+            count += 1
+            if count > 18:
+                break
+            traj_subsampled.append(traj_normalized[idx])
 
-        print(filename, len(traj))
+        print(filename, len(traj_subsampled))
 
-        T = np.asarray(traj)
-        plt.plot(T)
-        plt.show()
+        # T = np.asarray(traj_subsampled)
+        # plt.plot(T)
+        # plt.show()
 
-        dataset.append(traj)
+        dataset.append(traj_subsampled)
 
     pickle.dump(dataset, open(savename, "wb"))
     print(len(dataset))
-    
+
 
 if __name__ == "__main__":
     main()

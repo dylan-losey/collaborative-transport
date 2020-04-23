@@ -1,3 +1,0 @@
--collect data with users = robot-lead
--check if we recover trust / can predict their actions
--change prediction horizon

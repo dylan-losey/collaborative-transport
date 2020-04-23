@@ -35,15 +35,13 @@ def plot_trust2z(model):
     data = pickle.load(open(DATASET, "rb"))
     data = torch.Tensor(data)
 
-    trust, Z = [], []
+    Z = []
     for traj in data:
-        x = traj[:,1:]
+        x = traj[:,0:8]
         z_pred = model.encode(x)
-        z_true = traj[0, 0]
-        trust.append(z_true.item())
         Z.append(z_pred.item())
 
-    plt.plot(trust, Z, 'bo')
+    plt.plot(Z, 'bo')
     plt.show()
 
 
@@ -53,14 +51,14 @@ def plot_action(model):
     data = torch.Tensor(data)
 
     for traj in data:
-        x = traj[:,1:]
+        x = traj[:,0:8]
         s = x[:,0:6]
         a = x[:,6:8]
-        z = traj[0, 0].item()
+        ar = x[:,4:6]
         ahat = model.forward(x, s)
 
-        print(round(z*10))
         plt.plot(a.numpy(),'--')
+        plt.plot(ar.numpy(),'.-')
         plt.plot(ahat.detach().numpy(),'o')
         plt.show()
 
@@ -70,9 +68,9 @@ def plot_zrollout(model):
     data = pickle.load(open(DATASET, "rb"))
     data = torch.Tensor(data)
 
-    Z = [0.0, 0.25, 0.5, 0.75, 1.0]
+    Z = [1.0, 0.0, -1.0]
     for traj in data:
-        x = traj[:,1:]
+        x = traj[:,0:8]
         s = x[:,0:6]
         ahuman = x[:,6:8]
         arobot = x[:,4:6]
@@ -85,7 +83,7 @@ def plot_zrollout(model):
         plt.show()
 
 
-DATASET = "models/traj_dataset.pkl"
+DATASET = "dataset/dylan_test.pkl"
 
 def main():
 
