@@ -58,21 +58,15 @@ class Target(pygame.sprite.Sprite):
 
 class Player(pygame.sprite.Sprite):
 
-    def __init__(self):
+    def __init__(self, goal_angle, obs_angle):
 
         # create goal
-        goal_angle = math.pi/4#np.random.uniform(-math.pi, math.pi)
         goal_radius = 350#np.random.uniform(300,360)
         self.goal = np.array([0.5*worldx, 0.5*worldy])
         self.goal += goal_radius * np.array([math.cos(goal_angle), math.sin(goal_angle)])
         self.dist2goal = None
 
         # create obstacle
-        obs_angle = math.pi/4 + math.pi/6
-        # if np.random.random() < 0.5:
-        #     obs_angle = goal_angle - math.pi/6
-        # else:
-        #     obs_angle = goal_angle + math.pi/6
         obs_radius = 180#np.random.uniform(150,200)
         self.obs = np.array([0.5*worldx, 0.5*worldy])
         self.obs += obs_radius * np.array([math.cos(obs_angle), math.sin(obs_angle)])
@@ -104,12 +98,9 @@ class Player(pygame.sprite.Sprite):
 
         # noise properties
         self.mu = 0.0
-        self.sigma = 0.0
+        self.sigma = 5.0
 
         # trust properties
-        self.time2hold = 1
-        self.n_steps = 0
-        self.trust = None
         self.trust_param = None
 
     def acceleration(self, f1, f2):
@@ -139,7 +130,7 @@ class Player(pygame.sprite.Sprite):
         self.dist2obs = np.linalg.norm(avoid)
         magnitude = 0.0
         if self.dist2obs < 150:
-            magnitude = -(150.0 - self.dist2obs)**2
+            magnitude = -0.001* (150.0 - self.dist2obs)**2
         fobs = magnitude * avoid
 
         # choose robot force
@@ -150,12 +141,7 @@ class Player(pygame.sprite.Sprite):
         f1 += np.random.normal(self.mu, self.sigma, 2)
 
         # choose human force
-        if not self.n_steps % self.time2hold:
-            self.trust = (np.random.random() < self.trust_param)
-        self.n_steps += 1
         f2 = fgoal * (1 - self.trust_param) + f1 * self.trust_param
-        # if self.trust:
-        #     f2 = copy.deepcopy(f1)
         f2 += np.random.normal(self.mu, self.sigma, 2)
 
         # save the inputs
@@ -184,20 +170,24 @@ class Player(pygame.sprite.Sprite):
 def main():
 
     num_of_runs = int(sys.argv[1])
-    TRUST = [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
-    fps = 3
+    TRUST = [0.0,0.2,0.4,0.6,0.8,1.0]
+    fps = 10
 
-    for trust in TRUST:
+    for count in range(num_of_runs):
 
-        for count in range(num_of_runs):
+        print("run #: ", count)
+        goal_angle = np.random.uniform(-math.pi/4, math.pi/4)
+        obs_angle = goal_angle + np.random.uniform(-math.pi/6, math.pi/6)
 
-            file_name = "simulated-data/t" + str(trust) + "_r" + str(count) + ".pkl"
+        for trust in TRUST:
+
+            file_name = "simulated-data/noise/t" + str(trust) + "_r" + str(count) + ".pkl"
 
             clock = pygame.time.Clock()
             pygame.init()
             world = pygame.display.set_mode([worldx,worldy])
 
-            player = Player()
+            player = Player(goal_angle, obs_angle)
             target = Target(player.goal)
             obs = Obstacle(player.obs)
             sprite_list = pygame.sprite.Group()
@@ -206,8 +196,6 @@ def main():
             sprite_list.add(player)
 
             data = []
-            prev_time = time.time()
-            time_elapsed = 0
             player.trust_param = trust
 
             while True:
@@ -222,18 +210,15 @@ def main():
                                 sys.exit()
                                 main = False
 
-                delta_t = time.time() - prev_time
-                time_elapsed += delta_t
-                prev_time = time.time()
-
+                delta_t = 1.0 / fps
                 player.update(delta_t)
 
-                data.append([time_elapsed, player.x, player.y] + list(player.goal) + list(player.obs) + player.f1 + player.f2)
+                data.append([player.trust_param, player.x, player.y] + list(player.goal) + list(player.obs) + player.f1 + player.f2)
                 pickle.dump(data, open(file_name, "wb" ))
 
                 if player.dist2goal < 50:
                     print(len(data))
-                    print("We made it to the target!")
+                    # print("We made it to the target!")
                     pygame.quit()
                     break
 
@@ -241,7 +226,7 @@ def main():
                 sprite_list.draw(world)
 
                 pygame.display.flip()
-                clock.tick(fps)
+                # clock.tick(fps)
 
 
 if __name__ == "__main__":

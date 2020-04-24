@@ -99,15 +99,15 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
 
         # create goal
-        goal_angle = 0.0#np.random.uniform(-math.pi, math.pi)
-        goal_radius = 350
+        goal_angle = math.pi/4#np.random.uniform(-math.pi, math.pi)
+        goal_radius = 100
         self.goal = np.array([0.5*worldx, 0.5*worldy])
         self.goal += goal_radius * np.array([math.cos(goal_angle), math.sin(goal_angle)])
         self.dist2goal = None
 
         # create obstacle
-        obs_angle = -math.pi/6#goal_angle + np.random.uniform(-math.pi/6, math.pi/6)
-        obs_radius = 180
+        obs_angle = goal_angle + np.random.uniform(-math.pi/6, math.pi/6)
+        obs_radius = 0
         self.obs = np.array([0.5*worldx, 0.5*worldy])
         self.obs += obs_radius * np.array([math.cos(obs_angle), math.sin(obs_angle)])
         self.dist2obs = None
@@ -123,8 +123,8 @@ class Player(pygame.sprite.Sprite):
         self.x_speed = 0.0
         self.y_speed = 0.0
         self.angle_speed = 0.0
-        self.x = 0.5*worldx
-        self.y = 0.5*worldy
+        self.x = 0.25*worldx
+        self.y = 0.25*worldy
         self.angle = 0.0
         self.rect.x = self.x
         self.rect.y = self.y
@@ -217,7 +217,7 @@ def main():
         obs = Obstacle(player.obs)
         sprite_list = pygame.sprite.Group()
         sprite_list.add(target)
-        # sprite_list.add(obs)
+        sprite_list.add(obs)
         sprite_list.add(player)
 
         data = []
@@ -238,7 +238,7 @@ def main():
             player.update(delta_t)
 
             data.append([player.x, player.y] + list(player.goal) + player.f1 + player.f2 + list(player.obs))
-            pickle.dump(data, open(file_name, "wb" ))
+            # pickle.dump(data, open(file_name, "wb" ))
 
             if player.dist2goal < 50:
                 pygame.quit()

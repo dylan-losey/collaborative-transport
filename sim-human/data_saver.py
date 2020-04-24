@@ -9,10 +9,12 @@ import matplotlib.pyplot as plt
 def main():
 
     dataset = []
-    folder = 'simulated-data'
-    savename = 'models/traj_dataset.pkl'
+    folder = 'simulated-data/noise'
+    savename = 'models/noise_dataset_2.pkl'
 
     for filename in os.listdir(folder):
+        if filename[-6] is not 'r' or filename[-5] is not '2':
+            continue
         local_data = pickle.load(open(folder + "/" + filename, "rb"))
         traj = []
         for count, item in enumerate(local_data):
@@ -25,7 +27,7 @@ def main():
             item_x[5] = item_x[5] / 50.0
             item_x[6] = item_x[6] / 50.0
             item_x[7] = item_x[7] / 50.0
-            if count < 20:
+            if count < 35:
                 traj.append([float(filename[1:4])] + item_x)
 
         print(filename, len(traj))
@@ -38,7 +40,7 @@ def main():
 
     pickle.dump(dataset, open(savename, "wb"))
     print(len(dataset))
-    
+
 
 if __name__ == "__main__":
     main()
