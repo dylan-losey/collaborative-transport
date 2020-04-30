@@ -1,11 +1,14 @@
--collect data with users = this is working OK
--change prediction horizon = this is working OK
-
--what we tested:
-* adding noise with a prediction horizon, recognized changing z
-* noise over goal, obstacle, actions
-* z actually seems consistent in meaning... i.e., for all tasks,
-	z = 0.0 is follow, z = -3.0 is ignore
 
 -what needs to be done:
 * more complex than just force agreement
+* outer RL loop
+
+
+-predicting sequence using z = this is working OK
+
+-collect data with users = this is working OK
+-change prediction horizon = this is working OK
+-adding noise in task = this is working OK
+-confirming z is consistent in meaning = works OK
+
+

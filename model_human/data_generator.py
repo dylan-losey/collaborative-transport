@@ -181,20 +181,20 @@ def main():
     fps = 4
     delta_t = 1.0 / fps
 
-    r_obs = 300.0
+    r_obs = 200.0
     n_rounds = 20
     Follow = [0.0, 0.25, 0.5, 0.75, 1.0]
 
     for round in range(n_rounds):
 
         # pick goal position
-        goal_angle = np.random.uniform(-math.pi/4, math.pi/4)
+        goal_angle = np.random.uniform(-math.pi/6, math.pi/6)
         goal_radius = 350
         goal_position = np.array([0.5*worldx, 0.5*worldy])
         goal_position += goal_radius * np.array([math.cos(goal_angle), math.sin(goal_angle)])
 
         # pick obstacle position
-        obs_angle = goal_angle + np.random.uniform(-math.pi/6, math.pi/6)
+        obs_angle = goal_angle + np.random.uniform(math.pi/6, math.pi/4)
         obs_radius = 100
         obs_position = np.array([0.5*worldx, 0.5*worldy])
         obs_position += obs_radius * np.array([math.cos(obs_angle), math.sin(obs_angle)])
@@ -214,7 +214,7 @@ def main():
             sprite_list.add(table)
 
             data = []
-            savename = "trajectories/r_obs_300/f_" + str(follow) + "_r_" + str(round) + ".pkl"
+            savename = "trajectories/r_obs_200/f_" + str(follow) + "_r_" + str(round) + ".pkl"
 
 
             while True:
